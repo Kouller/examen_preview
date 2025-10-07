@@ -32,21 +32,3 @@ button[disabled]{opacity:.6;cursor:not-allowed}
 .warn{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);padding:10px;border-radius:12px}
 .ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.4);padding:10px;border-radius:12px}
 pre.diag{white-space:pre-wrap;background:#0003;padding:8px;border-radius:8px;margin-top:10px}
-
-/* ===== Tema claro accesible ===== */
-:root[data-theme="light"] body{ background:#ffffff; color:#0a0a0a; }
-:root[data-theme="light"] .card{ background:#ffffff; border-color:#d1d5db; }
-:root[data-theme="light"] .muted{ color:#374151; }
-:root[data-theme="light"] input, 
-:root[data-theme="light"] select, 
-:root[data-theme="light"] textarea{
-  background:#ffffff; color:#111827; border-color:#9ca3af;
-}
-:root[data-theme="light"] .btn{ background:#1f2937; color:#ffffff; }
-:root[data-theme="light"] .btn-ghost{ background:#ffffff; color:#1f2937; border-color:#9ca3af; }
-:root[data-theme="light"] .option{ border-color:#d1d5db; }
-:root[data-theme="light"] .pill{ border-color:#9ca3af; color:#111827; }
-:root[data-theme="light"] .bar{ background:#e5e7eb; }
-:root[data-theme="light"] .bar>div{ background:#16a34a; }
-:root[data-theme="light"] .camPreview{ border-color:#d1d5db; }
-:root[data-theme="light"] .watermark{ color:#6b7280; }
