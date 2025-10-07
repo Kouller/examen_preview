@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Examen – 42 preguntas</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <noscript><div style="padding:12px;background:#ffc;color:#222">Necesitas habilitar JavaScript para usar el examen.</div></noscript>
+  <div class="wrap">
+    <div id="welcome" class="card pad">
+      <h1>Examen Oficial (42 preguntas)</h1>
+      <p class="muted">Duración predeterminada: <strong>2 horas</strong>. Se muestra <strong>1 pregunta a la vez</strong>. No hay retroceso. Al terminar o agotar el tiempo, se calcula la nota automáticamente.</p>
+      <div class="space"></div>
+      <div class="warn">
+        <h3>Indicaciones</h3>
+        <ul>
+          <li>Lee cuidadosamente cada enunciado. Algunas preguntas pueden ser de <strong>selección múltiple</strong>.</li>
+          <li>No podrás volver a preguntas anteriores una vez pulses <em>Continuar</em>.</li>
+          <li>El temporizador se inicia al comenzar y se detiene al <em>Finalizar examen</em> o al agotarse.</li>
+          <li>Opcional: puedes <strong>activar tu cámara</strong> y <strong>grabar la sesión</strong> (solo en tu dispositivo) para fines de supervisión.</li>
+        </ul>
+      </div>
+      <div class="space"></div>
+      <div class="ok tiny">💡 Cambia la duración editando <span class="kbd">DEFAULT_DURATION_MS</span> en <code>app.js?v=8</code>. Para pruebas rápidas: añade <code>?mins=5</code> a la URL.</div>
+      <div class="space"></div>
+      
+      <!-- Datos del participante -->
+      <label for="studentEmail" class="muted">Correo TCS (obligatorio)</label>
+      <input id="studentEmail" type="email" required placeholder="usuario@tcs.com" inputmode="email" />
+      <label for="studentFullName" class="muted">Nombre y Apellido (obligatorio)</label>
+      <input id="studentFullName" type="text" required placeholder="Nombre Apellido" />
+      <span class="tiny muted">El correo debe ser del dominio TCS y el nombre debe ser completo.</span>
+      <div class="space"></div>
+
+      <div class="row">
+        <button id="btnStart" class="btn-accent">Empezar examen</button>
+        <button id="btnCam" class="btn-ghost" title="Activa una vista previa en la esquina (opcional)">Activar cámara</button>
+        <button id="btnRecord" class="btn-ghost" title="Graba tu pestaña + cámara superpuesta (opcional)">Grabar pantalla (tab)</button>
+        <span class="muted tiny">La grabación se guarda localmente; podrás descargarla al finalizar.</span>
+      </div>
+      <pre id="diag" class="diag tiny"></pre>
+    </div>
+
+    <div id="exam" class="card" style="display:none">
+      <div class="pad">
+        <div class="row" style="align-items:center;justify-content:space-between">
+          <div>
+            <h2 id="qTitle">Pregunta</h2>
+            <div class="muted tiny">Pregunta <span id="qIndex">1</span> de <span id="qTotal">42</span></div>
+          </div>
+          <div style="min-width:260px">
+            <div class="timer center pill" id="timer">02:00:00</div>
+            <div class="progress" aria-hidden="true"><div id="bar" class="bar"></div></div>
+          </div>
+        </div>
+        <div class="space"></div>
+        <div id="qText" class="question"></div>
+        <div class="space"></div>
+        <form id="options" class="col"></form>
+      </div>
+      <div class="toolbar">
+        <div class="left">
+          <span class="pill tiny" id="modePill">Única respuesta</span>
+        </div>
+        <div class="right">
+          <button id="btnFinish" class="btn-danger">Finalizar examen</button>
+          <button id="btnNext" class="btn-accent">Continuar →</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="results" class="card pad" style="display:none">
+      <h2>Resultados</h2>
+      <p>Tu nota: <strong class="scorebox" id="score"></strong> <span id="passStatus" class="pill"></span></p>
+      <p class="muted">Se evalúan respuestas exactas (en selección múltiple, debes marcar <em>todas</em> y solo las correctas).</p>
+      <div class="row">
+        <button class="btn-accent" id="btnDownload">Descargar grabación</button>
+        <!-- CSV desactivado por solicitud del usuario -->
+        <button class="btn-accent" id="btnExportPDF">Descargar reporte (PDF)</button>
+        <button class="btn-ghost" id="btnRestart">Volver a inicio</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- jsPDF para generar el PDF del reporte -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <!-- Configuración de Apps Script (GAS) para enviar por Gmail) -->
+  <script>
+    window.GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwTu4o5XW3w4rI0fQMgAKL7AAyDEjHaMk6C9ycXdU_QkxDz9eAjFgNSaB6E50bwpc-qMw/exec";
+    window.TCS_DOMAIN = "@tcs.com";
+  </script>
+
+  <div class="corner">
+    <video id="cam" class="camPreview" autoplay playsinline muted style="display:none"></video>
+  </div>
+  <div class="watermark">Modo examen</div>
+
+  <script defer src="./bank.js?v=8"></script>
+  <script defer src="./app.js?v=8"></script>
+</body>
+</html>
