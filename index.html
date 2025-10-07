@@ -6,6 +6,14 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>Examen – 42 preguntas</title>
   <link rel="stylesheet" href="./style.css" />
+  <script>
+  (function(){
+    try {
+      var t = localStorage.getItem('exam_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch(e){}
+  })();
+  </script>
 </head>
 <body>
   <noscript><div style="padding:12px;background:#ffc;color:#222">Necesitas habilitar JavaScript para usar el examen.</div></noscript>
@@ -34,6 +42,14 @@
       <input id="studentFullName" type="text" required placeholder="Nombre Apellido" />
       <span class="tiny muted">El correo debe ser del dominio TCS y el nombre debe ser completo.</span>
       <div class="space"></div>
+      <!-- Selector de tema (claro/oscuro) -->
+      <label for="themeSelect" class="muted">Tema visual</label>
+      <select id="themeSelect" style="width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#0b1220;color:#e5e7eb;margin:8px 0 12px">
+        <option value="dark">Oscuro (predeterminado)</option>
+        <option value="light">Claro</option>
+      </select>
+      <div class="space"></div>
+
 
       <div class="row">
         <button id="btnStart" class="btn-accent">Empezar examen</button>

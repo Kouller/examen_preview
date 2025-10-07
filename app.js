@@ -38,7 +38,7 @@ async function __buildPdfBlob({items, answers, scorePct, passed, startedAt, fini
     doc.splitTextToSize(qline, width).forEach(t=>{ doc.text(t, left, y); y+=line;});
     doc.setFontSize(10);
     doc.text(`Marcadas: ${givenText}`, left, y); y+=line;
-    doc.text(`Correctas: ${corrText}    => ${ok?'✓':'✗'}`, left, y); y+=line+6;
+    doc.text(`Correctas: ${corrText}   ${ok ? '✓' : '✗'}` , left, y); y+=line+6;
     if(y>760){ doc.addPage(); y=64; }
   });
   return doc.output('blob');
@@ -434,4 +434,19 @@ function exportPDF(items, answers, scoreText, passText){
   if(!w){ alert('Permite ventanas emergentes para exportar a PDF.'); return; }
   w.document.open(); w.document.write(html); w.document.close();
 }
+});
+
+// === Tema claro/oscuro ===
+function applyTheme(theme){
+  var t = (theme === 'light') ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  try{ localStorage.setItem('exam_theme', t); }catch(e){}
+}
+document.addEventListener('DOMContentLoaded', function(){
+  try{
+    var sel = document.getElementById('themeSelect');
+    var saved = localStorage.getItem('exam_theme') || 'dark';
+    applyTheme(saved);
+    if(sel){ sel.value = saved; sel.addEventListener('change', function(){ applyTheme(sel.value); }); }
+  }catch(e){ console.warn(e); }
 });
