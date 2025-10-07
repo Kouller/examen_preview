@@ -55,7 +55,7 @@ async function __sendResultsViaGmail({ pdfBlob, userEmail, fullName, scorePct, p
 
 
 /** ========= CONFIG ========= */
-const DEFAULT_DURATION_MS = 2 * 60 * 60 * 1000; // 2h
+const DEFAULT_DURATION_MS = 1.5 * 60 * 60 * 1000; // 2h
 
 /** ========= HELPERS ========= */
 const $ = (id)=>document.getElementById(id);
