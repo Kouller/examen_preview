@@ -50,10 +50,3 @@ pre.diag{white-space:pre-wrap;background:#0003;padding:8px;border-radius:8px;mar
 :root[data-theme="light"] .bar>div{ background:#16a34a; }
 :root[data-theme="light"] .camPreview{ border-color:#d1d5db; }
 :root[data-theme="light"] .watermark{ color:#6b7280; }
-
-/* === Bordes y contraste claros para la barra de tiempo === */
-:root[data-theme="dark"] .bar { background:#1f2937 !important; border:1px solid #374151 !important; border-radius:999px; overflow:hidden; }
-:root[data-theme="dark"] .bar>div { background:#ffffff !important; }
-:root[data-theme="light"] .bar { background:#e5e7eb !important; border:1px solid #9ca3af !important; border-radius:999px; overflow:hidden; }
-:root[data-theme="light"] .bar>div { background:#000000 !important; }
-

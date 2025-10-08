@@ -20,7 +20,7 @@
   <div class="wrap">
     <div id="welcome" class="card pad">
       <h1>Examen Oficial (42 preguntas)</h1>
-      <p class="muted">Duración predeterminada: <strong>1 hora 30 minutos</strong>. Se muestra <strong>1 pregunta a la vez</strong>. No hay retroceso. Al terminar o agotar el tiempo, se calcula la nota automáticamente.</p>
+      <p class="muted">Duración predeterminada: <strong>2 horas</strong>. Se muestra <strong>1 pregunta a la vez</strong>. No hay retroceso. Al terminar o agotar el tiempo, se calcula la nota automáticamente.</p>
       <div class="space"></div>
       <div class="warn">
         <h3>Indicaciones</h3>
@@ -28,12 +28,11 @@
           <li>Lee cuidadosamente cada enunciado. Algunas preguntas pueden ser de <strong>selección múltiple</strong>.</li>
           <li>No podrás volver a preguntas anteriores una vez pulses <em>Continuar</em>.</li>
           <li>El temporizador se inicia al comenzar y se detiene al <em>Finalizar examen</em> o al agotarse.</li>
-          <li>Opcional: puedes <strong>activar tu cámara</strong> y <strong>grabar la sesión</strong> (solo en tu dispositivo) para fines de simulación.</li>
+          <li>Opcional: puedes <strong>activar tu cámara</strong> y <strong>grabar la sesión</strong> (solo en tu dispositivo) para fines de supervisión.</li>
         </ul>
       </div>
       <div class="space"></div>
-      <div class="ok tiny">💡 El examen es solo una simulación, por favor tratarlo como confidencial.</div>
-      <!--<div class="ok tiny">💡 Cambia la duración editando <span class="kbd">DEFAULT_DURATION_MS</span> en <code>app.js?v=8</code>. Para pruebas rápidas: añade <code>?mins=5</code> a la URL.</div>-->
+      <div class="ok tiny">💡 Cambia la duración editando <span class="kbd">DEFAULT_DURATION_MS</span> en <code>app.js?v=8</code>. Para pruebas rápidas: añade <code>?mins=5</code> a la URL.</div>
       <div class="space"></div>
       
       <!-- Datos del participante -->
@@ -50,6 +49,12 @@
         <option value="light">Claro</option>
       </select>
       <div class="space"></div>
+      <!-- Conexión Gmail (autorización 1 sola vez) -->
+      <div id="gmailConnect" class="row" style="margin:8px 0 12px">
+        <button id="btnConnectGmail" class="btn">Conectar Gmail (autorizar)</button>
+        <span class="tiny muted">Si es la primera vez, haz clic y autoriza en la pestaña nueva.</span>
+      </div>
+
 
 
       <div class="row">
@@ -107,7 +112,7 @@
 
   <!-- Configuración de Apps Script (GAS) para enviar por Gmail) -->
   <script>
-    window.GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwTu4o5XW3w4rI0fQMgAKL7AAyDEjHaMk6C9ycXdU_QkxDz9eAjFgNSaB6E50bwpc-qMw/exec";
+    window.GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbyv1T64hN0pQaP_Zicbfy5EQ79ibLOZ4-PPl-h-mAgBmQhcBrr9SHN2su7VYXyXa4zkfg/exec";
     window.TCS_DOMAIN = "@tcs.com";
   </script>
 

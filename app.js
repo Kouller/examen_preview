@@ -28,17 +28,18 @@ async function __buildPdfBlob({items, answers, scorePct, passed, startedAt, fini
   doc.text(`Inicio: ${dt(startedAt)}  |  Fin: ${dt(finishedAt)}`, left, y); y+=line;
   doc.text(`Puntaje: ${scorePct.toFixed(2)}%  |  Estado: ${passed?'APROBADO':'DESAPROBADO'}`, left, y); y+=24;
   
-  // Aciertos globales
+  // === Agregado: resumen de aciertos antes de listar preguntas ===
   try {
-    let __totalQ = (items||[]).length;
-    let __correctCount = 0;
-    for (let __i=0; __i<__totalQ; __i++) {
-      const __need = ((items[__i]?.answer_letters)||[]).slice().sort();
-      const __got  = ((answers[__i])||[]).slice().sort();
-      if (JSON.stringify(__need)===JSON.stringify(__got)) __correctCount++;
+    const totalQ = (items||[]).length || 42;
+    let correctCount = 0;
+    for (let i = 0; i < (items||[]).length; i++) {
+      const need = ((items[i].answer_letters)||[]).slice().sort();
+      const got  = ((answers||[])[i]||[]).slice().sort();
+      if (JSON.stringify(need) === JSON.stringify(got)) correctCount++;
     }
-    doc.text(`Aciertos: ${__correctCount}/${__totalQ}`, left, y); y+=24;
-  } catch(_) {}
+    doc.text(`Acertadas: ${correctCount}/${totalQ}`, left, y);
+    y += line;
+  } catch (_) {}
 (items||[]).forEach((it,i)=>{
     const need=(it.answer_letters||[]).slice().sort();
     const got =((answers||[])[i]||[]).slice().sort();
@@ -61,13 +62,13 @@ async function __sendResultsViaGmail({ pdfBlob, userEmail, fullName, scorePct, p
   const dataUrl = await __blobToDataURL(pdfBlob);
   const subject = `${fullName} - desarrollo seguro - ${userEmail}`;
   const payload = { subject, message: `Puntaje: ${scorePct.toFixed(2)}% | Estado: ${passed ? "APROBADO" : "DESAPROBADO"}`, filename: "reporte_examen.pdf", base64: dataUrl };
-  await fetch(endpoint, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  await fetch(endpoint, { method: 'POST', mode: 'no-cors', credentials: 'include', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
   try{ if(window.__diag) window.__diag('Correo enviado vía Gmail (Apps Script).'); }catch(_){}
 }
 
 
 /** ========= CONFIG ========= */
-const DEFAULT_DURATION_MS = 1.5 * 60 * 60 * 1000; // 2h
+const DEFAULT_DURATION_MS = 2 * 60 * 60 * 1000; // 2h
 
 /** ========= HELPERS ========= */
 const $ = (id)=>document.getElementById(id);
@@ -416,6 +417,14 @@ function exportPDF(items, answers, scoreText, passText){
     return { num: i+1, q: it.question||'', givenText, correctText, estado };
   });
 
+const totalQ = 42;
+let correctCount = 0;
+items.forEach((it, i) => {
+  const need = (it.answer_letters || []).slice().sort();
+  const got  = (answers[i] || []).slice().sort();
+  if (JSON.stringify(need) === JSON.stringify(got)) correctCount++;
+});
+
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
     <title>Reporte de examen</title>
     <style>
@@ -429,6 +438,7 @@ function exportPDF(items, answers, scoreText, passText){
     <h1>Reporte de examen</h1>
     <div class="muted">Nota: <strong>${escapeHtml(scoreText)}</strong></div>
     <div class="pill" style="margin-top:6px">${escapeHtml(passText||'')}</div>
+    <p><strong>Acertadas: ${correctCount}/${totalQ}</strong></p>
     <table>
       <thead><tr><th>#</th><th>Pregunta</th><th>Respuesta dada</th><th>Respuesta correcta</th><th>Estado</th></tr></thead>
       <tbody>${rows.map(r=>`<tr>
@@ -462,3 +472,178 @@ document.addEventListener('DOMContentLoaded', function(){
     if(sel){ sel.value = saved; sel.addEventListener('change', function(){ applyTheme(sel.value); }); }
   }catch(e){ console.warn(e); }
 });
+
+// Botón para abrir el Web App y forzar el consentimiento de Gmail (una sola vez)
+document.addEventListener('DOMContentLoaded', function(){
+  var btn = document.getElementById('btnConnectGmail');
+  if(btn && !btn.__wired){
+    btn.__wired = true;
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      var url = String(window.GAS_ENDPOINT||'').trim();
+      if(!url){ alert('Configura window.GAS_ENDPOINT en index.html'); return; }
+      window.open(url + (url.includes('?') ? '&' : '?') + 'ping=1', '_blank', 'noopener');
+      alert('Se abrió una pestaña para autorizar Gmail. Si no ves el diálogo, asegúrate de iniciar sesión con Google en esa pestaña.');
+    });
+  }
+});
+
+// === Patch mínimo: habilitar "Empezar examen" SOLO si (conectado && nombre && correo) y texto "Conectado" ===
+(function(){
+  if (window.__gateMinimalOnce) return; window.__gateMinimalOnce = true;
+
+  function isVerified(){
+    try { return sessionStorage.getItem('gmail_verified') === '1'; } catch(e){ return false; }
+  }
+  function setVerified(v){
+    try { sessionStorage.setItem('gmail_verified', v ? '1' : '0'); } catch(e){}
+  }
+  function okEmail(v){
+    return (typeof __isValidTcsEmail === 'function') ? __isValidTcsEmail(v) : /\S+@\S+\.\S+/.test(String(v||''));
+  }
+  function okName(v){
+    return (typeof __isValidFullName === 'function') ? __isValidFullName(v) : (String(v||'').trim().split(/\s+/).length >= 2);
+  }
+  function refresh(){
+    var start = document.getElementById('btnStart');
+    var mail  = document.getElementById('studentEmail');
+    var name  = document.getElementById('studentFullName');
+    var row   = document.getElementById('gmailConnect');
+    var hint  = row ? row.querySelector('span.tiny') : null;
+    var btn   = document.getElementById('btnConnectGmail');
+
+    var connected = isVerified();
+    // Texto de ayuda
+    if(hint){
+      hint.textContent = connected ? 'Conectado' : 'Si es la primera vez, haz clic y autoriza en la pestaña nueva.';
+      hint.style.color = connected ? '#10b981' : '';
+    }
+    // Habilitar start solo si todo OK
+    if(start){
+      var enable = connected && okEmail(mail && mail.value) && okName(name && name.value);
+      start.disabled = !enable;
+      if(enable){ start.removeAttribute('aria-disabled'); } else { start.setAttribute('aria-disabled','true'); }
+    }
+    // No oculto ni borro el botón conectar; solo lo deshabilito si ya está conectado
+    if(btn){ btn.disabled = !!connected; }
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    // Estado inicial: no conectado hasta que el usuario pulse el botón (por navegador/sesión)
+    if (!isVerified()) setVerified(false);
+
+    var btn = document.getElementById('btnConnectGmail');
+    if(btn && !btn.__gateOnce){
+      btn.__gateOnce = true;
+      btn.addEventListener('click', function(e){
+        // No alteramos tu lógica de abrir la pestaña; solo marcamos esta sesión como conectada
+        setVerified(true);
+        refresh();
+      });
+    }
+    // Validar dinámicamente campos
+    ['studentEmail','studentFullName'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el && !el.__gateOnce){
+        el.__gateOnce = true;
+        el.addEventListener('input', refresh);
+        el.addEventListener('blur', refresh);
+        el.addEventListener('change', refresh);
+      }
+    });
+    // Inicio deshabilitado hasta cumplir requisitos
+    var start = document.getElementById('btnStart');
+    if(start){ start.disabled = true; start.setAttribute('aria-disabled','true'); }
+
+    refresh();
+  });
+})();
+
+// === Gate por CARGA (per load): exigir "Conectar" + nombre/apellido + correo ===
+(function () {
+  if (window.__gatePerLoadOnce) return; window.__gatePerLoadOnce = true;
+
+  function isV(){ try { return sessionStorage.getItem('gmail_verified') === '1'; } catch(e){ return false; } }
+  function setV(on){ try { sessionStorage.setItem('gmail_verified', on ? '1' : '0'); } catch(e){} }
+
+  function okEmail(v){
+    // Usa tu validador si existe
+    return (typeof __isValidTcsEmail === 'function')
+      ? __isValidTcsEmail(v)
+      : /\S+@\S+\.\S+/.test(String(v||''));
+  }
+  function okName(v){
+    // Usa tu validador si existe
+    return (typeof __isValidFullName === 'function')
+      ? __isValidFullName(v)
+      : (String(v||'').trim().split(/\s+/).length >= 2);
+  }
+
+  function refresh(){
+    var start = document.getElementById('btnStart');
+    var mail  = document.getElementById('studentEmail');
+    var name  = document.getElementById('studentFullName');
+    var row   = document.getElementById('gmailConnect');
+    var hint  = row ? row.querySelector('span.tiny') : null;
+    var btn   = document.getElementById('btnConnectGmail');
+
+    var connected = isV();
+
+    // Mensaje junto al botón
+    if (hint){
+      hint.textContent = connected
+        ? 'Conectado'
+        : 'Si es la primera vez, haz clic y autoriza en la pestaña nueva.';
+      hint.style.color = connected ? '#10b981' : '';
+    }
+
+    // Habilitar "Empezar examen" solo si (conectado && nombre && correo)
+    if (start){
+      var enable = connected && okName(name && name.value) && okEmail(mail && mail.value);
+      start.disabled = !enable;
+      if (enable) start.removeAttribute('aria-disabled');
+      else start.setAttribute('aria-disabled','true');
+    }
+
+    // No oculto el botón: solo lo deshabilito cuando ya está conectado
+    if (btn) btn.disabled = !!connected;
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    // 🔁 SIEMPRE reiniciar estado al cargar (no persistir “Conectado” entre recargas)
+    setV(false);
+
+    // Conectar Gmail: abre tu GAS y marca esta sesión como conectada
+    var btn = document.getElementById('btnConnectGmail');
+    if (btn && !btn.__gateOnce){
+      btn.__gateOnce = true;
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        var url = String(window.GAS_ENDPOINT || '').trim();
+        if (!url){ alert('Configura window.GAS_ENDPOINT en index.html'); return; }
+        window.open(url + (url.includes('?') ? '&' : '?') + 'ping=1', '_blank', 'noopener');
+
+        // Marca esta sesión como conectada (esta pestaña/navegador)
+        setV(true);
+        refresh();
+      });
+    }
+
+    // Validación en vivo de Nombre/Apellido y Correo
+    ['studentEmail','studentFullName'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el && !el.__gateOnce){
+        el.__gateOnce = true;
+        el.addEventListener('input',  refresh);
+        el.addEventListener('blur',   refresh);
+        el.addEventListener('change', refresh);
+      }
+    });
+
+    // Botón iniciar deshabilitado al arrancar
+    var start = document.getElementById('btnStart');
+    if (start){ start.disabled = true; start.setAttribute('aria-disabled','true'); }
+
+    refresh();
+  });
+})();
