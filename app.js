@@ -29,14 +29,16 @@ async function __buildPdfBlob({items, answers, scorePct, passed, startedAt, fini
   doc.text(`Puntaje: ${scorePct.toFixed(2)}%  |  Estado: ${passed?'APROBADO':'DESAPROBADO'}`, left, y); y+=24;
   
   // Aciertos globales
-  let __totalQ = (items||[]).length;
-  let __correctCount = 0;
-  for(let __i=0; __i<__totalQ; __i++){
-    const __need = ((items[__i]?.answer_letters)||[]).slice().sort();
-    const __got  = ((answers[__i])||[]).slice().sort();
-    if(JSON.stringify(__need)===JSON.stringify(__got)) __correctCount++;
-  }
-  doc.text(`Aciertos: ${__correctCount}/${__totalQ}`, left, y); y+=24;
+  try {
+    let __totalQ = (items||[]).length;
+    let __correctCount = 0;
+    for (let __i=0; __i<__totalQ; __i++) {
+      const __need = ((items[__i]?.answer_letters)||[]).slice().sort();
+      const __got  = ((answers[__i])||[]).slice().sort();
+      if (JSON.stringify(__need)===JSON.stringify(__got)) __correctCount++;
+    }
+    doc.text(`Aciertos: ${__correctCount}/${__totalQ}`, left, y); y+=24;
+  } catch(_) {}
 (items||[]).forEach((it,i)=>{
     const need=(it.answer_letters||[]).slice().sort();
     const got =((answers||[])[i]||[]).slice().sort();
@@ -47,10 +49,8 @@ async function __buildPdfBlob({items, answers, scorePct, passed, startedAt, fini
     doc.setFont(undefined, 'normal');
     doc.splitTextToSize(qline, width).forEach(t=>{ doc.text(t, left, y); y+=line;});
     doc.setFontSize(10);
-    doc.text(`Respondida: ${got.length>0 ? 'Sí' : 'No'}`, left, y); y+=line;
     doc.text(`Marcadas: ${givenText}`, left, y); y+=line;
-    doc.text(`Correctas: ${corrText}`, left, y); y+=line;
-    doc.text(`Estado: ${got.length>0 ? (ok ? 'Correcta' : 'Incorrecta') : '—'}`, left, y); y+=line+6;
+    doc.text(`Correctas: ${corrText}   ${ok ? '✓' : '✗'}` , left, y); y+=line+6;
     if(y>760){ doc.addPage(); y=64; }
   });
   return doc.output('blob');
@@ -67,7 +67,7 @@ async function __sendResultsViaGmail({ pdfBlob, userEmail, fullName, scorePct, p
 
 
 /** ========= CONFIG ========= */
-const DEFAULT_DURATION_MS = 1.5 * 60 * 60 * 1000; // 1h 30m // 2h
+const DEFAULT_DURATION_MS = 1.5 * 60 * 60 * 1000; // 2h
 
 /** ========= HELPERS ========= */
 const $ = (id)=>document.getElementById(id);
@@ -404,22 +404,6 @@ function exportPDF(items, answers, scoreText, passText){
     const correctLetters = (it.answer_letters||[]).slice().sort();
     const givenLetters = (answers[i]||[]).slice().sort();
     const isCorrect = JSON.stringify(correctLetters) === JSON.stringify(givenLetters);
-    const responded = givenLetters.length > 0;
-    const correctText = (it.options||[])
-       .filter(o=>correctLetters.includes(o.label))
-       .map(o=>`${o.label.toUpperCase()}. ${escapeHtml(o.text||'')}`)
-       .join(' | ');
-    const givenText = (it.options||[])
-       .filter(o=>givenLetters.includes(o.label))
-       .map(o=>`${o.label.toUpperCase()}. ${escapeHtml(o.text||'')}`)
-       .join(' | ') || '—';
-    const estado = responded ? (isCorrect ? 'Correcta' : 'Incorrecta') : '—';
-    return { num: i+1, q: it.question||'', givenText, correctText, estado, responded };
-  });
-  const total = items.length;
-  const aciertos = rows.filter(r=>r.estado==='Correcta').length;
-const givenLetters = (answers[i]||[]).slice().sort();
-    const isCorrect = JSON.stringify(correctLetters) === JSON.stringify(givenLetters);
     const correctText = (it.options||[])
        .filter(o=>correctLetters.includes(o.label))
        .map(o=>`${o.label.toUpperCase()}. ${escapeHtml(o.text||'')}`)
@@ -443,15 +427,13 @@ const givenLetters = (answers[i]||[]).slice().sort();
       .pill{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid #ccc;font-size:12px}
     </style></head><body>
     <h1>Reporte de examen</h1>
-    <div class=\"muted\">Aciertos: <strong>${aciertos}/${total}</strong></div>
-    <div class=\"muted\">Nota: <strong>${escapeHtml(scoreText)}</strong></div>
+    <div class="muted">Nota: <strong>${escapeHtml(scoreText)}</strong></div>
     <div class="pill" style="margin-top:6px">${escapeHtml(passText||'')}</div>
     <table>
-      <thead><tr><th>#</th><th>Pregunta</th><th>Respondida</th><th>Respuesta dada</th><th>Respuesta correcta</th><th>Estado</th></tr></thead>
+      <thead><tr><th>#</th><th>Pregunta</th><th>Respuesta dada</th><th>Respuesta correcta</th><th>Estado</th></tr></thead>
       <tbody>${rows.map(r=>`<tr>
         <td>${r.num}</td>
         <td>${escapeHtml(r.q)}</td>
-        <td>${r.responded ? 'Sí' : 'No'}</td>
         <td>${escapeHtml(r.givenText)}</td>
         <td>${escapeHtml(r.correctText)}</td>
         <td>${escapeHtml(r.estado)}</td>
@@ -464,4 +446,19 @@ const givenLetters = (answers[i]||[]).slice().sort();
   if(!w){ alert('Permite ventanas emergentes para exportar a PDF.'); return; }
   w.document.open(); w.document.write(html); w.document.close();
 }
+});
+
+// === Tema claro/oscuro ===
+function applyTheme(theme){
+  var t = (theme === 'light') ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  try{ localStorage.setItem('exam_theme', t); }catch(e){}
+}
+document.addEventListener('DOMContentLoaded', function(){
+  try{
+    var sel = document.getElementById('themeSelect');
+    var saved = localStorage.getItem('exam_theme') || 'dark';
+    applyTheme(saved);
+    if(sel){ sel.value = saved; sel.addEventListener('change', function(){ applyTheme(sel.value); }); }
+  }catch(e){ console.warn(e); }
 });
