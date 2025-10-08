@@ -593,7 +593,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if (hint){
       hint.textContent = connected
         ? 'Conectado'
-        : 'Si es la primera vez, haz clic y autoriza en la pestaña nueva.';
+        : 'Debe conectarse cada vez que inicie, en caso no se conecte correctamente, no se enviaria su prueba.';
       hint.style.color = connected ? '#10b981' : '';
     }
 
