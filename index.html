@@ -28,6 +28,8 @@
           <li>Lee cuidadosamente cada enunciado. Algunas preguntas pueden ser de <strong>selección múltiple</strong>.</li>
           <li>No podrás volver a preguntas anteriores una vez pulses <em>Continuar</em>.</li>
           <li>El temporizador se inicia al comenzar y se detiene al <em>Finalizar examen</em> o al agotarse.</li>
+          <li>El botón <em>Finalizar examen</em> cerrará la prueba de forma automática, por lo que no se recomienda usarlo durante el examen(solo continuar).</li>
+          <li>Conectarse a su correo personal gmail, <em>no el de banco</em></li>
           <li>Opcional: puedes <strong>activar tu cámara</strong> y <strong>grabar la sesión</strong> (solo en tu dispositivo) para fines de simulación.</li>
         </ul>
       </div>
@@ -38,8 +40,8 @@
       <!-- Datos del participante -->
       <label for="studentEmail" class="muted">Correo TCS (obligatorio)</label>
       <input id="studentEmail" type="email" required placeholder="usuario@tcs.com" inputmode="email" />
-      <label for="studentFullName" class="muted">Nombres y Apellidos (obligatorio)</label>
-      <input id="studentFullName" type="text" required placeholder="Nombres Apellidos" />
+      <label for="studentFullName" class="muted">Nombre y Apellido (obligatorio)</label>
+      <input id="studentFullName" type="text" required placeholder="Nombre Apellido" />
       <span class="tiny muted">El correo debe ser del dominio TCS y el nombre debe ser completo.</span>
       <div class="space"></div>
       <!-- Selector de tema (claro/oscuro) -->
@@ -52,7 +54,7 @@
       <!-- Conexión Gmail (autorización 1 sola vez) -->
       <div id="gmailConnect" class="row" style="margin:8px 0 12px">
         <button id="btnConnectGmail" class="btn">Conectar Gmail (autorizar)</button>
-        <span class="tiny muted">Debe conectarse a su email personal cada vez que inicie, en caso no se conecte correctamente, no se enviaria su prueba.</span>
+        <span class="tiny muted">Debe conectarse cada vez que inicie, en caso no se conecte correctamente, no se enviaria su prueba.</span>
       </div>
 
 
