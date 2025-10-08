@@ -515,7 +515,7 @@ document.addEventListener('DOMContentLoaded', function(){
     var connected = isVerified();
     // Texto de ayuda
     if(hint){
-      hint.textContent = connected ? 'Conectado' : 'Si es la primera vez, haz clic y autoriza en la pestaña nueva.';
+      hint.textContent = connected ? 'Conectado' : 'Debe conectarse cada vez que inicie, en caso no se conecte correctamente, no se enviaria su prueba.';
       hint.style.color = connected ? '#10b981' : '';
     }
     // Habilitar start solo si todo OK
