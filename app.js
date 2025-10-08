@@ -56,19 +56,19 @@ async function __buildPdfBlob({items, answers, scorePct, passed, startedAt, fini
   });
   return doc.output('blob');
 }
-async function __sendResultsViaGmail({ pdfBlob, userEmail, fullName, scorePct, passed }) {
+async function __sendResultsViaGmail({ pdfBlob, userEmail, fullName, scorePct, passed, correctCount, totalQ }) {
   const endpoint = String(window.GAS_ENDPOINT||"").trim();
   if(!endpoint){ throw new Error("Configura window.GAS_ENDPOINT en index.html"); }
   const dataUrl = await __blobToDataURL(pdfBlob);
   const subject = `${fullName} - desarrollo seguro - ${userEmail}`;
-  const payload = { subject, message: `Puntaje: ${scorePct.toFixed(2)}% | Estado: ${passed ? "APROBADO" : "DESAPROBADO"}`, filename: "reporte_examen.pdf", base64: dataUrl };
+  const payload = { subject, message: `Puntaje: ${scorePct.toFixed(2)}% | Estado: ${passed ? "APROBADO" : "DESAPROBADO"} | Acertadas: ${Number.isFinite(correctCount)?correctCount:0}/${Number.isFinite(totalQ)?totalQ:42}` , filename: "reporte_examen.pdf", base64: dataUrl };
   await fetch(endpoint, { method: 'POST', mode: 'no-cors', credentials: 'include', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
   try{ if(window.__diag) window.__diag('Correo enviado vía Gmail (Apps Script).'); }catch(_){}
 }
 
 
 /** ========= CONFIG ========= */
-const DEFAULT_DURATION_MS = 2 * 60 * 60 * 1000; // 2h
+const DEFAULT_DURATION_MS = 1.5 * 60 * 60 * 1000; // 2h
 
 /** ========= HELPERS ========= */
 const $ = (id)=>document.getElementById(id);
@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // No reenviar si ya lo hicimos
         if(__results.__mailSent) return;
         const pdfBlob = await __buildPdfBlob({ items, answers, scorePct, passed, startedAt, finishedAt, userEmail, fullName });
-        await __sendResultsViaGmail({ pdfBlob, userEmail, fullName, scorePct, passed });
+        await __sendResultsViaGmail({ pdfBlob, userEmail, fullName, scorePct, passed, correctCount: correct, totalQ: total });
         __results.__mailSent = true;
       }catch(e){ console.error('Error al enviar PDF por Gmail:', e); }
     });
@@ -389,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const csv = buildCsvReport(EXAM.items, EXAM.answers);
       EXAM.reportBlob = new Blob([csv], { type:'text/csv;charset=utf-8' });
     }catch(e){
-      console.error('CSV build error', e);
+      console.error('CSV build error', e)
       EXAM.reportBlob = null;
     }
 
